@@ -1,0 +1,91 @@
+pragma solidity ^0.8.19;
+
+contract SimpleResearchFundingDAO {
+    address public admin;
+    uint256 public proposalCount;
+    uint256 public votingPeriod = 1 days; // Shortened for testing
+
+    struct Proposal {
+        uint256 id;
+        address recipient;
+        uint256 amount;
+        uint256 endTime;
+        uint256 votesFor;
+        uint256 votesAgainst;
+        bool executed;
+    }
+
+    mapping(uint256 => Proposal) public proposals;
+    mapping(uint256 => mapping(address => bool)) public votes; // Proposal ID => Voter Address => Voted
+
+    event ProposalCreated(uint256 id, address recipient, uint256 amount, uint256 endTime);
+    event Voted(uint256 proposalId, address voter, bool support);
+    event ProposalExecuted(uint256 id, address recipient, uint256 amount);
+
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Not an admin");
+        _;
+    }
+
+    modifier onlyDuringVotingPeriod(uint256 proposalId) {
+        require(block.timestamp < proposals[proposalId].endTime, "Voting period has ended");
+        _;
+    }
+
+    modifier hasNotVoted(uint256 proposalId) {
+        require(!votes[proposalId][msg.sender], "Already voted");
+        _;
+    }
+
+    modifier proposalExists(uint256 proposalId) {
+        require(proposals[proposalId].id == proposalId, "Proposal does not exist");
+        _;
+    }
+
+    constructor() {
+        admin = msg.sender;
+    }
+
+    function createProposal(address recipient, uint256 amount) external onlyAdmin {
+        require(amount > 0, "Amount must be greater than zero");
+        
+        proposalCount++;
+        Proposal storage newProposal = proposals[proposalCount];
+        newProposal.id = proposalCount;
+        newProposal.recipient = recipient;
+        newProposal.amount = amount;
+        newProposal.endTime = block.timestamp + votingPeriod;
+        
+        emit ProposalCreated(proposalCount, recipient, amount, newProposal.endTime);
+    }
+
+    function vote(uint256 proposalId, bool support) external onlyDuringVotingPeriod(proposalId) hasNotVoted(proposalId) proposalExists(proposalId) {
+        Proposal storage proposal = proposals[proposalId];
+        
+        if (support) {
+            proposal.votesFor++;
+        } else {
+            proposal.votesAgainst++;
+        }
+        votes[proposalId][msg.sender] = true;
+
+        emit Voted(proposalId, msg.sender, support);
+    }
+
+    function executeProposal(uint256 proposalId) external proposalExists(proposalId) {
+        Proposal storage proposal = proposals[proposalId];
+
+        require(block.timestamp >= proposal.endTime, "Voting period not ended");
+        require(!proposal.executed, "Proposal already executed");
+        require(proposal.votesFor > proposal.votesAgainst, "Proposal not approved");
+
+        proposal.executed = true;
+        (bool success, ) = proposal.recipient.call{value: proposal.amount}("");
+        require(success, "Transfer failed");
+
+        emit ProposalExecuted(proposalId, proposal.recipient, proposal.amount);
+    }
+
+    receive() external payable {}
+}
+
