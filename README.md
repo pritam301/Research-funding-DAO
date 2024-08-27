@@ -1,3 +1,5 @@
+![image](https://github.com/user-attachments/assets/4acbbb9a-a91d-4194-b4cc-15735647143a)
+
 Research Funding DAO
 Welcome to the Research Funding DAO project! This decentralized autonomous organization (DAO) is designed to streamline and democratize the process of funding research initiatives through blockchain technology. This README file provides an overview of the project's vision, architecture, contract details, and future scope.
 
@@ -50,3 +52,10 @@ ProposalVoted
 FundsDisbursed
 ProgressUpdated
 FinalReportSubmitted
+
+
+contract details
+for any queary or furthur information please visit on 
+Name: Pritam Chatri
+Email: pritamchetry08@gmail.com
+
