@@ -56,6 +56,6 @@ FinalReportSubmitted
 
 Contract details
 For any queary or furthur information please visit on 
-Name: Pritam Chatri
+Name: Pritam Chetri
 Email: pritamchetry08@gmail.com
 
